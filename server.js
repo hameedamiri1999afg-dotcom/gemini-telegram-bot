@@ -43,7 +43,12 @@ bot.on("message", async (msg) => {
             input: userMessage
         });
 
-        const answer = interaction.output_text;
+        const answer = (interaction.steps || [])
+            .filter(step => step.type === "model_output")
+            .flatMap(step => step.content || [])
+            .filter(content => content.type === "text")
+            .map(content => content.text)
+            .join("");
 
         if (!answer) {
             await bot.sendMessage(
@@ -73,9 +78,14 @@ bot.on("message", async (msg) => {
 });
 
 bot.on("polling_error", (error) => {
-    console.error("Telegram polling error:", error.message);
+    console.error(
+        "Telegram polling error:",
+        error.message
+    );
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`HZR Gemini Bot running on port ${PORT}`);
+    console.log(
+        `HZR Gemini Telegram Bot running on port ${PORT}`
+    );
 });
