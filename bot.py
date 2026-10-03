@@ -1,41 +1,75 @@
 import os
 import logging
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import (
+    Application,
+    MessageHandler,
+    ContextTypes,
+    filters,
+)
+
+from google import genai
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 
-TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN تنظیم نشده است.")
+
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY تنظیم نشده است.")
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+MODEL = "gemini-2.5-flash"
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "سلام! من HZR Bot هستم.\n"
-        "ربات با موفقیت فعال شد."
-    )
+async def handle_message(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+    if not update.message or not update.message.text:
+        return
 
+    user_message = update.message.text
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "دستورات موجود:\n"
-        "/start - شروع ربات\n"
-        "/help - راهنما"
-    )
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=user_message
+        )
+
+        answer = response.text
+
+        if not answer:
+            answer = "نتوانستم پاسخی دریافت کنم."
+
+        await update.message.reply_text(answer)
+
+    except Exception as e:
+        logging.error("Gemini error: %s", e)
+        await update.message.reply_text(
+            "خطایی هنگام دریافت پاسخ از Gemini رخ داد."
+        )
 
 
 def main():
-    if not TOKEN:
-        raise ValueError("BOT_TOKEN در Environment Variables تنظیم نشده است.")
+    app = Application.builder().token(BOT_TOKEN).build()
 
-    app = Application.builder().token(TOKEN).build()
+    app.add_handler(
+        MessageHandler(
+            filters.TEXT & ~filters.COMMAND,
+            handle_message
+        )
+    )
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
+    print("HZR Gemini Bot is running...")
 
-    print("HZR Bot is running...")
     app.run_polling()
 
 
