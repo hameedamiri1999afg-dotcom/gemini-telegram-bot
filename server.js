@@ -39,7 +39,7 @@ bot.on("message", async (msg) => {
         console.log("User:", userMessage);
 
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.8-flash",
             contents: userMessage
         });
 
@@ -53,7 +53,7 @@ bot.on("message", async (msg) => {
             return;
         }
 
-        console.log("Gemini:", answer);
+        console.log("Gemini response received.");
 
         await bot.sendMessage(
             msg.chat.id,
@@ -65,7 +65,9 @@ bot.on("message", async (msg) => {
 
         await bot.sendMessage(
             msg.chat.id,
-            "خطایی هنگام دریافت پاسخ از Gemini رخ داد."
+            "خطایی در Gemini رخ داد.\n\n" +
+            `نوع خطا: ${error.constructor.name}\n` +
+            `جزئیات: ${error.message}`
         );
     }
 });
