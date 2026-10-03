@@ -25,7 +25,7 @@ const bot = new TelegramBot(BOT_TOKEN, {
 });
 
 app.get("/", (req, res) => {
-    res.status(200).send("HZR Gemini 3.8 Flash Bot is running.");
+    res.status(200).send("HZR Gemini Telegram Bot is running.");
 });
 
 bot.on("message", async (msg) => {
@@ -77,7 +77,5 @@ bot.on("polling_error", (error) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(
-        `HZR Gemini 3.8 Flash Bot running on port ${PORT}`
-    );
+    console.log(`HZR Gemini Bot running on port ${PORT}`);
 });
